@@ -145,7 +145,7 @@ def listen_print_loop(responses):
                 thread.start_new_thread(ledOn,(ledRed,))
             if ("yellow" in transcript + overwrite_chars):
                 thread.start_new_thread(ledOn,(ledYellow,))
-            if ("all" in transcript + overwrite_chars):
+            if ("three colors" in transcript + overwrite_chars):
                 thread.start_new_thread(ledOn,(ledGreen,))
                 thread.start_new_thread(ledOn,(ledRed,))
                 thread.start_new_thread(ledOn,(ledYellow,))

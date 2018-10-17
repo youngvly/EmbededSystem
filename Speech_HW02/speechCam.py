@@ -8,6 +8,7 @@ import sys
 import cv2
 import datetime
 import time
+import thread
 from google.cloud import vision
 from google.cloud.vision import types
 
@@ -44,8 +45,9 @@ def getDatetime():
     t =  year + month + day + hour + min + sec
 
     return t
-
-
+def camshow(img):
+    cv2.imshow(img)
+    
 class MicrophoneStream(object):
     """Opens a recording stream as a generator yielding the audio chunks."""
     def __init__(self, rate, chunk):
@@ -145,13 +147,11 @@ def listen_print_loop(responses):
             print(transcript + overwrite_chars)
             if ("take a picture" in transcript+overwrite_chars) :
                 ret, img = cam.read()
-                
-                
+                #thread.start_new_thread(camshow,(img,))
                 filename = getDatetime() + '.jpg'
                 cv2.imwrite(filename , img)
-                cv2.imshow('Cam', filename)
-                time.sleep(3)
-                cv2.destroyAllwindows()
+                img = cv2.imread(filename)
+                cv2.destroyAllWindows()
             # Exit recognition if any of the transcribed phrases could be
             # one of our keywords.
             if re.search(r'\b(exit|quit)\b', transcript, re.I):

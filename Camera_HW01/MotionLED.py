@@ -1,4 +1,4 @@
-#set driver -> sudo modprobe bcm-v4l2
+#set driver -> sudo modprobe bcm2835-v4l2
 
 import cv2
 import numpy as np
