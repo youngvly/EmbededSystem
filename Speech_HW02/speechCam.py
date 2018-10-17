@@ -4,6 +4,7 @@ from __future__ import division
 
 import re
 import sys
+import io
 
 import cv2
 import datetime
@@ -23,6 +24,27 @@ RATE = 16000
 CHUNK = int(RATE / 10)  # 100ms
 
 cam = cv2.VideoCapture(0)
+
+# [START vision_label_detection]
+def detect_labels(path):
+    """Detects labels in the file."""
+    from google.cloud import vision
+    client = vision.ImageAnnotatorClient()
+
+    # [START vision_python_migration_label_detection]
+    with io.open(path, 'rb') as image_file:
+        content = image_file.read()
+
+    image = vision.types.Image(content=content)
+
+    response = client.label_detection(image=image)
+    labels = response.label_annotations
+    print('Labels:')
+
+    for label in labels:
+        print(label.description)
+    # [END vision_python_migration_label_detection]
+# [END vision_label_detection]
 
 def getDatetime():
     date = datetime.datetime.now()
@@ -150,8 +172,8 @@ def listen_print_loop(responses):
                 #thread.start_new_thread(camshow,(img,))
                 filename = getDatetime() + '.jpg'
                 cv2.imwrite(filename , img)
-                img = cv2.imread(filename)
-                cv2.destroyAllWindows()
+                detect_labels(filename)
+                
             # Exit recognition if any of the transcribed phrases could be
             # one of our keywords.
             if re.search(r'\b(exit|quit)\b', transcript, re.I):
