@@ -45,10 +45,8 @@ def detect_landmarks(path):
     landmarks = response.landmark_annotations
     #print('Landmarks:')
 
-    
-    for landmark in landmarks:
-         #print(landmark.description)
-        return landmark.description
+    des = [landmark.description for landmark in landmarks]
+    return des
 
     # [END vision_python_migration_landmark_detection]
 # [END vision_landmark_detection]
@@ -193,7 +191,8 @@ def imageEqual(script) :
                 cv2.namedWindow("landmark",cv2.WINDOW_NORMAL)
                 cv2.imshow("landmark" , img)
                 cv2.waitKey(0)
-                cv2.destroyAllWindow()
+                cv2.destroyAllWindows()
+                #cv2.waitKey(1)
                 print(landmark)
                 return
     print("not existing")
