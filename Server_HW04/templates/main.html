@@ -1,0 +1,16 @@
+<html>
+<head>
+    <meta http-equiv="refresh" content="5">
+</head>
+
+<body>
+    {% if detected == False %}
+        <h1>Motion Detecting</h1>
+        <p>Nobody</p>
+    {% else %}
+        <h1 style="color:red;">Motion Detected!!</h1>
+        <a href="/camera">Take Picture</a>
+    {% endif %}
+</body>
+
+</html>
