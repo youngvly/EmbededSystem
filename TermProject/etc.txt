@@ -1,0 +1,10 @@
+Reference
+
+<Face Detect Deep Learning>
+http://www.paulvangent.com/2016/04/01/emotion-recognition-with-python-opencv-and-a-face-dataset/
+<Introducing> Video
+https://www.youtube.com/watch?v=XvAHHnYSv0s
+
+Screenshot
+scrot
+scrot -d 1 (1s delay)
