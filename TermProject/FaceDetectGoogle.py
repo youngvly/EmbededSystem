@@ -1,63 +1,92 @@
-import RPi.GPIO as GPIO
 import time
 import cv2
 import datetime
 import io
 import thread
+import os
 
 from google.cloud import vision
 from google.cloud.vision import types
 
-ledGreen = 19
-ledYellow = 20
-ledRed = 21
+cntJoy = 0
+cntAnger = 0
+cntSurprise = 0
+        
+class SetCam() :
+    filename = 'video.avi'
+    cam = cv2.VideoCapture(0)
+        
+    frames_per_second = 24.0
+    res = '720p'
 
-GPIO.setmode(GPIO.BCM)
+    # Standard Video Dimensions Sizes
+    STD_DIMENSIONS =  {
+        "480p": (640, 480),
+        "720p": (1280, 720),
+        "1080p": (1920, 1080),
+        "4k": (3840, 2160),
+    }
+    
+    # Video Encoding, might require additional installs
+    # Types of Codes: http://www.fourstopFlag = Event()
 
-GPIO.setup(ledGreen,GPIO.OUT)
-GPIO.setup(ledYellow,GPIO.OUT)
-GPIO.setup(ledRed,GPIO.OUT)
-GPIO.setup(12, GPIO.IN, GPIO.PUD_UP)
-GPIO.setwarnings(False)
+    VIDEO_TYPE = {
+        'avi' : cv2.cv.CV_FOURCC(*'XVID')
+        #'avi': cv2.VideoWriter_fourcc(*'XVID'),
+        #'mp4': cv2.VideoWriter_fourcc(*'H264'),
+        #'mp4': cv2.VideoWriter_fourcc(*'XVID'),
+    }
+        
+    #def __init__(self):
+        
+    # Set resolution for the video capture
+    # Function adapted from https://kirr.co/0l6qmh
+    def change_res(self,cam, width, height):
+        self.cam.set(3, width)
+        self.cam.set(4, height)
 
-cam = cv2.VideoCapture(0)
+    # grab resolution dimensions and set video capture to it.
+    def get_dims(self,cam, res='1080p'):
+        width, height = self.STD_DIMENSIONS["480p"]
+        if res in self.STD_DIMENSIONS:
+            width,height = self.STD_DIMENSIONS[res]
+        ## change the current caputre device
+        ## to the resulting resolution
+        self.change_res(cam, width, height)
+        return width, height
 
+    def get_video_type(self,filename):
+        filename, ext = os.path.splitext(filename)
+        if ext in self.VIDEO_TYPE:
+          return  self.VIDEO_TYPE[ext]
+        return self.VIDEO_TYPE['avi']
 
-def ledOn(color) :
-    GPIO.output(color,True)
-    time.sleep (5)
-    GPIO.output(color,False)
-
-def button():
-    state = False
-    if GPIO.input(12) == 0:
-        state = True
-        print("button press")
-    return state
 
 def camera():
+    setcam = SetCam()
     try:
+        out = cv2.VideoWriter(setcam.filename, setcam.get_video_type(setcam.filename), 25, setcam.get_dims(setcam.cam, setcam.res))
         while True:
-            ret, img = cam.read()
+            ret, img = setcam.cam.read()
             cv2.imshow('Cam', img)
-            
+            out.write(img)
             key = cv2.waitKey(10)
             if key == 27:
-            	cam.release()
-            	cv2.destroyAllWindows()
-            	GPIO.cleanup()
-            	break
-
-            if button() == True:
-                filename = getDatetime() + '.jpg'
-                cv2.imwrite(filename , img)
-                time.sleep(0.5)
-                detect_faces(filename)
+                setcam.cam.release()
+                out.release()
+                cv2.destroyAllWindows()
+                break
+            """time.sleep(1)
+            filename = getDatetime() + '.jpg'
+            cv2.imwrite(filename , img)
+            time.sleep(0.5)
+            detect_faces(filename)
+            break"""
 		
     except KeyboardInterrupt:
-        cam.release()
+        setcam.cam.release()
+        out.release()
         cv2.destroyAllWindows()
-        GPIO.cleanup()
 
 def getDatetime():
     date = datetime.datetime.now()
@@ -82,6 +111,7 @@ def getDatetime():
     return t
 
 def detect_faces(path):
+    
     client = vision.ImageAnnotatorClient()
 
     with io.open(path, 'rb') as image_file:
@@ -108,16 +138,23 @@ def detect_faces(path):
         print('face bounds: {}'.format(','.join(vertices)))
         
     if format(likelihood_name[face.anger_likelihood]) in likelihood_name[3:5:1]:
-        thread.start_new_thread(ledOn,(ledRed,))
+        print("Anger")
+        cntAnger += 1
     elif format(likelihood_name[face.joy_likelihood]) in likelihood_name[3:5:1]:
-        thread.start_new_thread(ledOn,(ledGreen,))
+        print("Joy")
+        cntJoy +=1
     elif format(likelihood_name[face.surprise_likelihood]) in likelihood_name[3:5:1]:
-        thread.start_new_thread(ledOn,(ledYellow,))
+        print("Surprise")
+        cntSurprise += 1
         
+
+def faceScore() :
+    summary = cntJoy + cntAnger + cntSurprise
+    
+    PercentJoy = cntJoy/summary * 100
+    
 if __name__ == '__main__':
-    GPIO.output(ledRed,False)
-    GPIO.output(ledGreen,False)
-    GPIO.output(ledYellow,False)
+    
     camera()
 
 
