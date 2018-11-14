@@ -23,6 +23,8 @@ TIMEOUTVAL = False
 RATE = 16000
 CHUNK = int(RATE / 10)  # 100ms
 
+filename = "Resources/speech.txt"
+
 def timeout(txtfile) :
     try :
         print("Google Speech Time out")
@@ -32,10 +34,16 @@ def timeout(txtfile) :
     finally :
         global TIMEOUTVAL
         TIMEOUTVAL = True
-        #print(TIMEOUTVAL)
-        txtfile.close()
+        #txtfile.close()
+        
+def afterTimeout() :
+    top3 = wordExtract(filename)
+    if len(top3) == 0 :
+        print("None")
+    for top in top3 :
+        print(top[0] , ":" , top[1])
     
-    
+
 class MicrophoneStream(object):
     """Opens a recording stream as a generator yielding the audio chunks."""
     def __init__(self, rate, chunk):
@@ -80,6 +88,8 @@ class MicrophoneStream(object):
 
     def generator(self):
         while not self.closed:
+            if TIMEOUTVAL == True :
+                return
             # Use a blocking get() to ensure there's at least one chunk of
             # data, and stop iteration if the chunk is None, indicating the
             # end of the audio stream.
@@ -102,12 +112,15 @@ class MicrophoneStream(object):
 
 
 def listen_print_loop(responses,txtfile):
-    
+    global TIMEOUTVAL
+
     num_chars_printed = 0
     try : 
         for response in responses:
+            
             #print(TIMEOUTVAL)
             if TIMEOUTVAL :
+                txtfile.write((transcript + overwrite_chars).encode('utf-8')) 
                 break
             if not response.results:
                 continue
@@ -118,8 +131,6 @@ def listen_print_loop(responses,txtfile):
             result = response.results[0]
             if not result.alternatives:
                 continue
-
-            # Display the transcription of the top alternative.
             transcript = result.alternatives[0].transcript
 
             # Display interim results, but with a carriage return at the end of the
@@ -134,17 +145,11 @@ def listen_print_loop(responses,txtfile):
                 sys.stdout.flush()
 
                 num_chars_printed = len(transcript)
-                
-
-
             else:
-                
-                
                 print(transcript + overwrite_chars)
                 txtfile.write((transcript + overwrite_chars).encode('utf-8'))
                 # Exit recognition if any of the transcribed phrases could be
                 # one of our keywords.
-                
                 if re.search(r'\b(finish)\b', transcript, re.I):
                     print('Exiting..')
                     txtfile.close()
@@ -152,16 +157,14 @@ def listen_print_loop(responses,txtfile):
 
             num_chars_printed = 0
     except Exception as e:
+        #txtfile.write((transcript + overwrite_chars).encode('utf-8'))
+        #txtfile.close()
+        #print("This is exception")
         print(e)
-        afterTimeout()
-        return
+        #afterTimeout()
+        #return
     
-def afterTimeout() :
-    filename = "Resources/speech.txt"
-    top3 = wordExtract(filename)
-    for top in top3 :
-        print(top[0] , ":" , top[1])
-        
+
 def detectSpeech():
     # See http://g.co/cloud/speech/docs/languages
     # for a list of supported languages.
@@ -176,11 +179,12 @@ def detectSpeech():
     streaming_config = types.StreamingRecognitionConfig(
         config=config,
         interim_results=True)
-    filename = "speech.txt"
+    
     txtfile = open(filename,'w')
-    t = Timer(10,timeout,[txtfile,])
+    t = Timer(10,timeout)
     t.start()
     with MicrophoneStream(RATE, CHUNK) as stream:
+
         audio_generator = stream.generator()
         requests = (types.StreamingRecognizeRequest(audio_content=content)
                     for content in audio_generator)
@@ -189,6 +193,8 @@ def detectSpeech():
         
         # Now, put the transcription responses to use.
         listen_print_loop(responses,txtfile)
+    txtfile.close()
+    afterTimeout()
     t.join()
     
 

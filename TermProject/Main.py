@@ -4,6 +4,8 @@ import Tkinter as tk
 from PIL import Image, ImageTk
 from FaceDetectGoogle import detect_faces,perpetualTimer,SetCam,faceScore
 from Speech import detectSpeech
+import threading
+
 #Set up GUI
 window = tk.Tk()  #Makes main window
 window.wm_title("WebCamTest")
@@ -46,9 +48,14 @@ def start():
     #start detect_face 5seconds
     p = perpetualTimer(5,detect_faces,img)
     p.start()
+    #start detecting Speech
+    t =  threading.Thread(name='detectSpeech', target=detectSpeech)
+    
     startbutton["text"] = "Stop"
     startbutton["command"] = stop
     print("Started")
+    t.join()
+    stop()
     
 def stop() :
     global writeVideo
