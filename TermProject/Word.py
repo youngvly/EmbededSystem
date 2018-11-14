@@ -30,7 +30,7 @@ def wordExtract(filename) :
     return top3
 
 if __name__ == "__main__" :
-    top3 = wordExtract("speech.txt")
+    top3 = wordExtract("Resources/speech.txt")
     print()
     for top in top3 :
         print(top[0] , ":" , top[1])

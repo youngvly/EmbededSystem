@@ -157,12 +157,12 @@ def listen_print_loop(responses,txtfile):
         return
     
 def afterTimeout() :
-    filename = "speech.txt"
+    filename = "Resources/speech.txt"
     top3 = wordExtract(filename)
     for top in top3 :
         print(top[0] , ":" , top[1])
         
-def main():
+def detectSpeech():
     # See http://g.co/cloud/speech/docs/languages
     # for a list of supported languages.
     language_code = 'ko-KR'  # a BCP-47 language tag
@@ -195,7 +195,7 @@ def main():
 
 if __name__ == '__main__':
     
-    main()
+    detectSpeech()
 # [END speech_transcribe_streaming_mic]
 
 

@@ -2,22 +2,45 @@ import time
 import cv2
 import datetime
 import io
-import thread
 import os
+import numpy
+from threading import Timer,Thread,Event
+
 
 from google.cloud import vision
 from google.cloud.vision import types
 
-cntJoy = 0
-cntAnger = 0
-cntSurprise = 0
-        
+class perpetualTimer():
+
+    def __init__(self,t,hFunction,imgs):
+      self.t=t
+      self.hFunction = hFunction
+      self.img = imgs
+      self.thread = Timer(self.t,self.handle_function)
+      #print(imgs)
+
+    def handle_function(self):
+      self.hFunction(self.img)
+      self.thread = Timer(self.t,self.handle_function)
+      self.thread.start()
+
+    def start(self):
+      self.thread.start()
+
+    def cancel(self):
+      self.thread.cancel()
+      
+    def setImg (self,imgs) :
+        #print("setImg : " ,imgs)
+        self.img = imgs
+
+
 class SetCam() :
-    filename = 'video.avi'
+    filename = 'Resources/FaceCapture/video.avi'
     cam = cv2.VideoCapture(0)
         
     frames_per_second = 24.0
-    res = '720p'
+    res = '480p'
 
     # Standard Video Dimensions Sizes
     STD_DIMENSIONS =  {
@@ -63,9 +86,13 @@ class SetCam() :
 
 
 def camera():
+    
+    global img
     setcam = SetCam()
+    p = perpetualTimer(5,detect_faces)
     try:
         out = cv2.VideoWriter(setcam.filename, setcam.get_video_type(setcam.filename), 25, setcam.get_dims(setcam.cam, setcam.res))
+        p.start()
         while True:
             ret, img = setcam.cam.read()
             cv2.imshow('Cam', img)
@@ -75,6 +102,7 @@ def camera():
                 setcam.cam.release()
                 out.release()
                 cv2.destroyAllWindows()
+                p.cancle()
                 break
             """time.sleep(1)
             filename = getDatetime() + '.jpg'
@@ -109,9 +137,9 @@ def getDatetime():
     t =  year + month + day + hour + min + sec
 
     return t
-
+"""
 def detect_faces(path):
-    
+          
     client = vision.ImageAnnotatorClient()
 
     with io.open(path, 'rb') as image_file:
@@ -146,8 +174,49 @@ def detect_faces(path):
     elif format(likelihood_name[face.surprise_likelihood]) in likelihood_name[3:5:1]:
         print("Surprise")
         cntSurprise += 1
-        
+        """
 
+def detect_faces(imgs):
+    global cntJoy,cntAnger,cntSurprise
+    cntJoy,cntAnger,cntSurprise,filecnt = 0 ,0 ,0 ,0
+    imgs = numpy.array(imgs)
+    client = vision.ImageAnnotatorClient()
+    cv2.imwrite('Resources/FaceCapture/'+str(filecnt) + '.jpg' , imgs)
+    with io.open('Resources/FaceCapture/'+str(filecnt) + '.jpg', 'rb') as image_file:
+        content = image_file.read()
+
+    image = types.Image(content=content)
+
+    response = client.face_detection(image=image)
+    
+    faces = response.face_annotations
+    
+   # Names of likelihood from google.cloud.vision.enums
+    likelihood_name = ('UNKNOWN', 'VERY_UNLIKELY', 'UNLIKELY', 'POSSIBLE',
+                       'LIKELY', 'VERY_LIKELY')
+    print('Faces:')
+    
+    for face in faces:
+        print('anger: {}'.format(likelihood_name[face.anger_likelihood]))
+        print('joy: {}'.format(likelihood_name[face.joy_likelihood]))
+        print('surprise: {}'.format(likelihood_name[face.surprise_likelihood]))
+
+        vertices = (['({},{})'.format(vertex.x, vertex.y)
+                    for vertex in face.bounding_poly.vertices])
+
+        print('face bounds: {}'.format(','.join(vertices)))
+        
+        if format(likelihood_name[face.anger_likelihood]) in likelihood_name[3:5:1]:
+            print("Anger")
+            cntAnger += 1
+        elif format(likelihood_name[face.joy_likelihood]) in likelihood_name[3:5:1]:
+            print("Joy")
+            cntJoy +=1
+        elif format(likelihood_name[face.surprise_likelihood]) in likelihood_name[3:5:1]:
+            print("Surprise")
+            cntSurprise += 1
+    filecnt +=1
+            
 def faceScore() :
     summary = cntJoy + cntAnger + cntSurprise
     
