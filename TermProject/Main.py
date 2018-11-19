@@ -1,10 +1,14 @@
 import numpy as np
 import cv2
 import Tkinter as tk
+import threading
+import time
 from PIL import Image, ImageTk
 from FaceDetectGoogle import detect_faces,perpetualTimer,SetCam,faceScore
-from Speech import detectSpeech
-import threading
+from Speech import detectSpeech,timeout,afterTimeout
+from Word import wordExtract
+from ScoreCalc import calcScore
+
 
 #Set up GUI
 window = tk.Tk()  #Makes main window
@@ -20,6 +24,8 @@ imageFrame.grid(row=0, column=0, padx=10, pady=2)
 lmain = tk.Label(imageFrame)
 lmain.grid(row=0, column=0)
 setcam = SetCam()
+
+speechFilename = "Resources/speech.txt"
 
 
 def show_cam():
@@ -39,8 +45,23 @@ def show_cam():
     lmain.configure(image=imgtk)
     lmain.after(10, show_cam)
     
+def showTop3 () :
+    top3 = wordExtract(speechFilename)
+    if len(top3) == 0 :
+        print("speech not detected (Top3 is null)")
+    for top in top3 :
+        form = top[0] + " : "  + str(top[1])
+        print(form)
+        l = tk.Label(thirdFrame,text = form,height=20)
+        l.pack()
+
+def clearFrame(frames) :
+    list = frames.grid_slaves()
+    for l in list:
+        l.destroy()
+        
 def start():
-    global out,p , writeVideo
+    global out,p,t, writeVideo,txtfile
     #write new video
     out = cv2.VideoWriter(setcam.filename, setcam.get_video_type(setcam.filename), 25, setcam.get_dims(setcam.cam, setcam.res))
     writeVideo = True
@@ -49,16 +70,18 @@ def start():
     p = perpetualTimer(5,detect_faces,img)
     p.start()
     #start detecting Speech
-    t =  threading.Thread(name='detectSpeech', target=detectSpeech)
-    
+    txtfile = open(speechFilename,'w')
+    t =  threading.Thread(name='detectSpeech', target=detectSpeech, args=(txtfile,))
+    t.start()
     startbutton["text"] = "Stop"
     startbutton["command"] = stop
+    
+    clearFrame(secondFrame)
+    clearFrame(thirdFrame)
     print("Started")
-    t.join()
-    stop()
     
 def stop() :
-    global writeVideo
+    global writeVideo , faceCnt
     writeVideo = False
     startbutton["text"] = "start"
     startbutton["command"] = start
@@ -66,8 +89,20 @@ def stop() :
     out.release()
     #stop detect_face
     p.cancel()
-    print("Stoped")
+    faceCnt = p.getFaceCnt()
+    time.sleep(2)
+    #stop detect_speech
+    timeout()
+    t.join()
+    txtfile.close()
+    showTop3()
+    print(faceCnt)
+    #calculate totalScore
+    totalscore = calcScore(faceCnt,wordCnt)
     
+    print("Stoped")
+
+
 #button
 secondFrame = tk.Frame(window,width=600,height=400,bg = "snow2")
 secondFrame.grid(row=1,column=0,rowspan=3,columnspan=2,sticky=tk.W+tk.E+tk.N+tk.S)
@@ -78,6 +113,7 @@ startbutton.place(relx=0.5, rely=0.1, anchor=tk.CENTER)
 #thirdFrame
 thirdFrame = tk.Frame(window,width=300,height = 800,bg = "snow3")
 thirdFrame.grid(row=0,column=3,rowspan=3,columnspan=2,sticky = tk.E+tk.N+tk.S)
+
 
 #Slider window (slider controls stage position)
 #sliderFrame = tk.Frame(window, width=600, height=100)

@@ -17,10 +17,11 @@ class perpetualTimer():
       self.hFunction = hFunction
       self.img = imgs
       self.thread = Timer(self.t,self.handle_function)
+      self.cntJoy,self.cntAnger,self.cntSurprise = 0,0,0
       #print(imgs)
 
     def handle_function(self):
-      self.hFunction(self.img)
+      self.cntJoy,self.cntAnger,self.cntSurprise = self.hFunction(self.img)
       self.thread = Timer(self.t,self.handle_function)
       self.thread.start()
 
@@ -33,6 +34,11 @@ class perpetualTimer():
     def setImg (self,imgs) :
         #print("setImg : " ,imgs)
         self.img = imgs
+    def getFaceCnt(self) :
+        return {"joy" : self.cntJoy,
+                "anger" : self.cntAnger,
+                "surprise" : self.cntSurprise
+                }
 
 
 class SetCam() :
@@ -209,13 +215,16 @@ def detect_faces(imgs):
         if format(likelihood_name[face.anger_likelihood]) in likelihood_name[3:5:1]:
             print("Anger")
             cntAnger += 1
+            cv2.imwrite('Resources/FaceCapture/Anger.jpg' , imgs)
         elif format(likelihood_name[face.joy_likelihood]) in likelihood_name[3:5:1]:
             print("Joy")
             cntJoy +=1
+            cv2.imwrite('Resources/FaceCapture/Joy.jpg' , imgs)
         elif format(likelihood_name[face.surprise_likelihood]) in likelihood_name[3:5:1]:
             print("Surprise")
             cntSurprise += 1
-    filecnt +=1
+            cv2.imwrite('Resources/FaceCapture/Surprise.jpg' , imgs)
+    return cntJoy,cntAnger,cntSurprise
             
 def faceScore() :
     summary = cntJoy + cntAnger + cntSurprise

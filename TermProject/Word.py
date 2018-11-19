@@ -22,11 +22,13 @@ def wordExtract(filename) :
     sortedFrequency = sorted(frequency.items(), key = lambda kv:kv[1],reverse=True)
     #for words in frequency_list :
      #       print (words,sortedFrequency[words])
-    print(sortedFrequency)
+    #print(sortedFrequency)
     top3 = []
-    if len(top3):
-        for i in range (3):
-            top3.append(sortedFrequency[i])
+    if len(sortedFrequency) < 3 :
+        return sortedFrequency
+    for i in range (0, 3 ,1):
+        #print(i)
+        top3.append(sortedFrequency[i])
     return top3
 
 if __name__ == "__main__" :

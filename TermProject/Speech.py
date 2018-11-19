@@ -25,21 +25,23 @@ CHUNK = int(RATE / 10)  # 100ms
 
 filename = "Resources/speech.txt"
 
-def timeout(txtfile) :
-    try :
-        print("Google Speech Time out")
+def timeout() :
+    global TIMEOUTVAL
+    TIMEOUTVAL = True
+    #try :
+        #print("Google Speech Time out")
         
-        if True:
-            raise Exception ("Timeout")
-    finally :
-        global TIMEOUTVAL
-        TIMEOUTVAL = True
-        #txtfile.close()
+     #   if True:
+    #      raise Exception ("Timeout")
+    #finally :
+     #   global TIMEOUTVAL
+      #  TIMEOUTVAL = True
+        
         
 def afterTimeout() :
     top3 = wordExtract(filename)
     if len(top3) == 0 :
-        print("None")
+        print("speech not detected (Top3 is null)")
     for top in top3 :
         print(top[0] , ":" , top[1])
     
@@ -165,7 +167,9 @@ def listen_print_loop(responses,txtfile):
         #return
     
 
-def detectSpeech():
+def detectSpeech(txtfile):
+    global TIMEOUTVAL
+    TIMEOUTVAL = False
     # See http://g.co/cloud/speech/docs/languages
     # for a list of supported languages.
     language_code = 'ko-KR'  # a BCP-47 language tag
@@ -180,9 +184,9 @@ def detectSpeech():
         config=config,
         interim_results=True)
     
-    txtfile = open(filename,'w')
-    t = Timer(10,timeout)
-    t.start()
+    #txtfile = open(filename,'w')
+    #t = Timer(10,timeout)
+    #t.start()
     with MicrophoneStream(RATE, CHUNK) as stream:
 
         audio_generator = stream.generator()
@@ -193,9 +197,9 @@ def detectSpeech():
         
         # Now, put the transcription responses to use.
         listen_print_loop(responses,txtfile)
-    txtfile.close()
-    afterTimeout()
-    t.join()
+    #txtfile.close()
+    #afterTimeout()
+    #t.join()
     
 
 
