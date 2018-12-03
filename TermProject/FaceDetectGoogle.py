@@ -181,10 +181,11 @@ def detect_faces(path):
         print("Surprise")
         cntSurprise += 1
         """
+cntJoy,cntAnger,cntSurprise,filecnt = 0 ,0 ,0 ,0
 
 def detect_faces(imgs):
     global cntJoy,cntAnger,cntSurprise
-    cntJoy,cntAnger,cntSurprise,filecnt = 0 ,0 ,0 ,0
+    
     imgs = numpy.array(imgs)
     client = vision.ImageAnnotatorClient()
     cv2.imwrite('Resources/FaceCapture/'+str(filecnt) + '.jpg' , imgs)

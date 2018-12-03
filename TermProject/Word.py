@@ -1,10 +1,33 @@
 #-*-coding:utf-8-*-
 import re
 import string
+import sys  
+
+reload(sys)  
+sys.setdefaultencoding('utf8')
 #import regex
 
+
+# WITH FILTER
+
+def isFiltered(word):
+    print (filterList[0])
+    if word in filterList :
+        return True
+    return False
+    
+    
 def wordExtract(filename) :
-    frequency = {}
+    #in filtertxt = open("FilteredWord.txt","r",encoding = "ISO-8859-1")
+    filtertxt = open("FilteredWord.txt","r")
+    filtertxt_str = filtertxt.read()
+    global filterList
+    filterList = filtertxt_str.split('/')
+    filterList = [f.decode("EUC-KR").encode("utf-8") for f in filterList]
+    print("F:" , filterList)
+    
+    filtered_frequency = {}
+    normal_frequency = {}
     txtfile = open(filename,"r")
     txt_string = txtfile.read()
 
@@ -14,25 +37,30 @@ def wordExtract(filename) :
     #match_pattern = regex.findall(ur'[\p{Hangul}|\p{Latin}]+',txt_string)
     match_pattern = re.findall(r'[가-힣]+',txt_string)
     for word in match_pattern :
-        count = frequency.get(word,0)
-        frequency[word] = count + 1
+        #if isFiltered(word) :
+        #    count = filtered_frequency.get(word,0)
+        #    filtered_frequency[word] = count + 1
+        count = filtered_frequency.get(word,0)
+        filtered_frequency[word] = count + 1
+        
     
-    frequency_list = frequency.keys()
+    frequency_list = filtered_frequency.keys()
     
-    sortedFrequency = sorted(frequency.items(), key = lambda kv:kv[1],reverse=True)
+    sortedFrequency = sorted(filtered_frequency.items(), key = lambda kv:kv[1],reverse=True)
     #for words in frequency_list :
      #       print (words,sortedFrequency[words])
     #print(sortedFrequency)
-    top3 = []
-    if len(sortedFrequency) < 3 :
+    top5 = []
+    if len(sortedFrequency) < 5 :
         return sortedFrequency
-    for i in range (0, 3 ,1):
+    i = 0
+    while(len(top5) == 5 or len(sortedFrequency) <=i):
         #print(i)
-        top3.append(sortedFrequency[i])
-    return top3
+        top5.append(sortedFrequency[i])
+    return top5
 
 if __name__ == "__main__" :
-    top3 = wordExtract("Resources/speech.txt")
+    top5 = wordExtract("Resources/speech.txt")
     print()
-    for top in top3 :
+    for top in top5 :
         print(top[0] , ":" , top[1])
