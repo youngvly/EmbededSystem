@@ -30,6 +30,7 @@ class perpetualTimer():
 
     def cancel(self):
       self.thread.cancel()
+      self.thread.join()
       
     def setImg (self,imgs) :
         #print("setImg : " ,imgs)
@@ -213,15 +214,15 @@ def detect_faces(imgs):
 
         print('face bounds: {}'.format(','.join(vertices)))
         
-        if format(likelihood_name[face.anger_likelihood]) in likelihood_name[3:5:1]:
+        if format(likelihood_name[face.anger_likelihood]) in likelihood_name[3::1]:
             print("Anger")
             cntAnger += 1
             cv2.imwrite('Resources/FaceCapture/Anger.jpg' , imgs)
-        elif format(likelihood_name[face.joy_likelihood]) in likelihood_name[3:5:1]:
+        elif format(likelihood_name[face.joy_likelihood]) in likelihood_name[3::1]:
             print("Joy")
             cntJoy +=1
             cv2.imwrite('Resources/FaceCapture/Joy.jpg' , imgs)
-        elif format(likelihood_name[face.surprise_likelihood]) in likelihood_name[3:5:1]:
+        elif format(likelihood_name[face.surprise_likelihood]) in likelihood_name[3::1]:
             print("Surprise")
             cntSurprise += 1
             cv2.imwrite('Resources/FaceCapture/Surprise.jpg' , imgs)

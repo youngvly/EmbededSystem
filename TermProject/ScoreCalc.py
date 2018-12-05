@@ -2,22 +2,26 @@ def faceScoreCalc(faceCnt) :
     totalTry = sum(faceCnt.values())
     if totalTry == 0:
         return 0
-    faceScore = 50
+    #faceScore = 50
+    faceScore = 25
     #anger
     angerScore = faceCnt["anger"]/totalTry * 50
     surpriseScore = faceCnt["surprise"]/totalTry * 50
-    faceScore = faceScore - angerScore - surpriseScore * 0.5
+    joyScore = faceCnt["joy"]/totalTry * 50
+    
+    faceScore = faceScore + joyScore - angerScore - surpriseScore * 0.5
+    #faceScore = faceScore - angerScore - surpriseScore * 0.5
     return faceScore
     
     
 def wordScoreCalc (wordCnt) :
-    faceScore = 50
+    wordScore = 50
     #1st : -5 , 2st -4, 3st -3 ...
     i = len(wordCnt)
     #if word cnt is upper than 3 times,
     for w in wordCnt :
         if w[1] >=5 :
-            faceScore - w[1]*i
+            wordScore - w[1]*i
         i -= 1
     
 def isFiltered(word):
@@ -28,6 +32,7 @@ def isFiltered(word):
 
 #wordCnt : top5
 def wordScoreCalc_Filter (wordCnt) :
+    #print(wordCnt)
     filtertxt = open("FilteredWord.txt","r")
     filtertxt_str = filtertxt.read()
     global filterList
@@ -35,14 +40,18 @@ def wordScoreCalc_Filter (wordCnt) :
     filterList = [f.decode("EUC-KR").encode("utf-8") for f in filterList]
     #print("F:" , filterList)
     
-    faceScore = 50
+    wordScore = 50
     #1st : -5 , 2st -4, 3st -3 ...
     i = len(wordCnt)
+    #speech not detected
+    if i == 0 :
+        return 0
     #if word cnt is upper than 3 times,
     for w in wordCnt :
         if isFiltered(w[0]) :
-            faceScore - (w[1]*i)
+            wordScore - (w[1]*i)
         i -= 1
+    return wordScore
     
 def calcScore(faceCnt,wordCnt) :
     facescore  = faceScoreCalc(faceCnt)

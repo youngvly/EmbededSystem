@@ -28,21 +28,14 @@ filename = "Resources/speech.txt"
 def timeout() :
     global TIMEOUTVAL
     TIMEOUTVAL = True
-    #try :
-        #print("Google Speech Time out")
-        
-     #   if True:
-    #      raise Exception ("Timeout")
-    #finally :
-     #   global TIMEOUTVAL
-      #  TIMEOUTVAL = True
-        
+    afterTimeout()
+    #raise Exception ("Timeout")        
         
 def afterTimeout() :
-    top3 = wordExtract(filename)
-    if len(top3) == 0 :
-        print("speech not detected (Top3 is null)")
-    for top in top3 :
+    wordDict = wordExtract(filename)
+    if len(wordDict) == 0 :
+        print("speech not detected")
+    for top in wordDict :
         print(top[0] , ":" , top[1])
     
 
@@ -184,19 +177,20 @@ def detectSpeech(txtfile):
         config=config,
         interim_results=True)
     
-    #txtfile = open(filename,'w')
-    #t = Timer(10,timeout)
-    #t.start()
-    with MicrophoneStream(RATE, CHUNK) as stream:
+    try:
+        with MicrophoneStream(RATE, CHUNK) as stream:
 
-        audio_generator = stream.generator()
-        requests = (types.StreamingRecognizeRequest(audio_content=content)
-                    for content in audio_generator)
+            audio_generator = stream.generator()
+            requests = (types.StreamingRecognizeRequest(audio_content=content)
+                        for content in audio_generator)
 
-        responses = client.streaming_recognize(streaming_config, requests)
-        
-        # Now, put the transcription responses to use.
-        listen_print_loop(responses,txtfile)
+            responses = client.streaming_recognize(streaming_config, requests)
+            
+            # Now, put the transcription responses to use.
+            listen_print_loop(responses,txtfile)
+    except Exception as e:
+
+        return
     #txtfile.close()
     #afterTimeout()
     #t.join()

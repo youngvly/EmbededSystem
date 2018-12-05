@@ -11,7 +11,7 @@ sys.setdefaultencoding('utf8')
 # WITH FILTER
 
 def isFiltered(word):
-    print (filterList[0])
+    #print (filterList[0])
     if word in filterList :
         return True
     return False
@@ -24,7 +24,7 @@ def wordExtract(filename) :
     global filterList
     filterList = filtertxt_str.split('/')
     filterList = [f.decode("EUC-KR").encode("utf-8") for f in filterList]
-    print("F:" , filterList)
+    #print("F:" , filterList)
     
     filtered_frequency = {}
     normal_frequency = {}
@@ -50,14 +50,14 @@ def wordExtract(filename) :
     #for words in frequency_list :
      #       print (words,sortedFrequency[words])
     #print(sortedFrequency)
-    top5 = []
-    if len(sortedFrequency) < 5 :
-        return sortedFrequency
-    i = 0
-    while(len(top5) == 5 or len(sortedFrequency) <=i):
-        #print(i)
-        top5.append(sortedFrequency[i])
-    return top5
+    #top5 = []
+    #if len(sortedFrequency) < 5 :
+    #   return sortedFrequency
+    #i = 0
+    #while(len(top5) == 5 or len(sortedFrequency) <=i):
+    #    top5.append(sortedFrequency[i])
+    #return top5
+    return sortedFrequency
 
 if __name__ == "__main__" :
     top5 = wordExtract("Resources/speech.txt")

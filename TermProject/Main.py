@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 import numpy as np
 import cv2
 import Tkinter as tk
@@ -13,6 +15,7 @@ from gi.repository import GLib, GObject, Gst
 #import gobject
 
 from PIL import Image, ImageTk
+import imageio
 from FaceDetectGoogle import detect_faces,perpetualTimer,SetCam,faceScore
 from Speech import detectSpeech,timeout,afterTimeout
 from Word2 import wordExtract
@@ -41,6 +44,9 @@ setcam = SetCam()
 
 speechFilename = "Resources/speech.txt"
 
+def raiseTimeout() :
+    timeout()
+    stop()
 
 def show_cam():
     global img , writeVideo
@@ -75,6 +81,7 @@ def showtop5 (frames) :
         i +=1
 def showScore (frames) :
     #calculate totalScore
+    global top5
     totalscore = calcScore(faceCnt,top5)
     score = tk.Label(frames,text = totalscore,height=20)
     score.pack()
@@ -85,27 +92,33 @@ def clearFrame(frames) :
         l.destroy()
         
 def start():
-    global out,p,t, writeVideo,txtfile
+    global out,p,t, writeVideo,txtfile,timeoutThread
     #write new video
-    out = cv2.VideoWriter(setcam.filename, setcam.get_video_type(setcam.filename), 25, setcam.get_dims(setcam.cam, setcam.res))
-    writeVideo = True
-    #print(writeVideo)
-    #start detect_face 5seconds
-    p = perpetualTimer(5,detect_faces,img)
-    p.start()
-    #start detecting Speech
-    txtfile = open(speechFilename,'w')
-    t =  threading.Thread(name='detectSpeech', target=detectSpeech, args=(txtfile,))
-    t.start()
-    startbutton["text"] = "Stop"
-    startbutton["command"] = stop
     
-    clearFrame(secondFrame)
-    clearFrame(thirdFrame)
-    print("Started")
+    try :
+        out = cv2.VideoWriter(setcam.filename, setcam.get_video_type(setcam.filename), 25, setcam.get_dims(setcam.cam, setcam.res))
+        writeVideo = True
+        #print(writeVideo)
+        #start detect_face 2seconds
+        p = perpetualTimer(2,detect_faces,img)
+        p.start()
+        #start detecting Speech
+        txtfile = open(speechFilename,'w')
+        t =  threading.Thread(name='detectSpeech', target=detectSpeech, args=(txtfile,))
+        t.start()
+        
+        timeoutThread = threading.Timer(64,raiseTimeout)
+        timeoutThread.start()
+        
+        startbutton["text"] = "Stop"
+        startbutton["command"] = stop
+        print("Started")
+    except Exception as e:
+        stop()
+    
     
 def stop() :
-    global writeVideo , faceCnt
+    global writeVideo , faceCnt,timeoutThread
     writeVideo = False
     startbutton["text"] = "start"
     startbutton["command"] = start
@@ -115,9 +128,11 @@ def stop() :
     p.cancel()
     faceCnt = p.getFaceCnt()
     time.sleep(2)
-    #stop detect_speech
+    #stop detect_speech ( raise Exception)
+    timeoutThread.cancel() #stop timer thread
     timeout()
     t.join()
+    
     txtfile.close()
     resultwindow = newResultWindow()
     showtop5(resultwindow.wordFrame)
@@ -138,6 +153,8 @@ class newResultWindow :
         #videoFrame
         self.videoFrame = tk.Frame(self.resultWindow,width=600,height=200,bg = "snow2")
         self.videoFrame.grid(row = 0,column=0)
+        self.videoLabel = tk.Label(self.videoFrame)
+        self.videoLabel.pack()
         #scoreFrame
         self.scoreFrame = tk.Frame(self.resultWindow,width=600,height=200,bg = "snow2")
         self.scoreFrame.grid(row = 1,column=0)
@@ -148,50 +165,30 @@ class newResultWindow :
         #buttonFrame
         #buttonFrame = tk.Frame(window,width=600,height=200,bg = "snow2")
         #buttonFrame.grid(row = 3,column=0)
-        videoPath = "/home/pi/EmbededSystem/TermProject/Resources/FaceCapture/video.avi"
-        self.showVideo(videoPath)
         
-    def on_sync_message(self,bus, message, window_id):
-        if not message.structure is None:
-            if message.structure.get_name() == 'prepare-xwindow-id':
-                image_sink = message.src
-                image_sink.set_property('force-aspect-ratio', True)
-                image_sink.set_xwindow_id(window_id)
+        videoThread = threading.Thread(target=self.showVideo)
+        videoThread.daemon = 1
+        videoThread.start()
+        
+        #ffmpeg
+        imageio.plugins.ffmpeg.download()
 
-    def showVideo (self,filename):
-        GObject.threads_init()
-        Gst.init(None)
-        #self.videoFrame.pack(side=tk.BOTTOM,anchor=tk.S,expand=tk.YES,fill=tk.BOTH)
+    def showVideo (self):
+        #OSError: [Errno 8] Exec format error
+        #videoPath = "/home/pi/EmbededSystem/TermProject/Resources/FaceCapture/video.avi"
+        videoPath = "./Resources/FaceCapture/video.avi"
+        video = imageio.get_reader(videoPath)
+        for image in video.iter_data() :
+            frame_image = ImageTK.PhotoImage(Image.fromarray(image))
+            label.config(image=frame_image)
+            label.image = frame_image
 
-        window_id = self.videoFrame.winfo_id()
 
-        player = Gst.ElementFactory.make('playbin','player')
-        #player = Gst.element_factory_make('playbin2', 'player')
-        player.set_property('video-sink', None)
-        player.set_property('uri', 'file://%s' % (filename))
-        player.set_state(Gst.State.PLAYING)
-
-        bus = player.get_bus()
-        bus.add_signal_watch()
-        bus.enable_sync_message_emission()
-        bus.connect('sync-message::element', self.on_sync_message, window_id)
+        
 
 startbutton = tk.Button(secondFrame,text="Start" ,width=50, command = start)
 startbutton.place(relx=0.5, rely=0.1, anchor=tk.CENTER)
 
-#thirdFrame = tk.Frame(window,width=300,height = 800,bg = "snow3")
-#thirdFrame.grid(row=0,column=3,rowspan=5,columnspan=1,sticky = tk.E+tk.N+tk.S)
-#l = tk.Label(thirdFrame,text = "WordFrequency Top5",height=20)
-#l.grid(row=1,column=0,rowspan=3,columnspan=2,sticky = tk.E+tk.N+tk.S)
-#l.pack()
-#l.place(height=50)
-
-
-
-
-#Slider window (slider controls stage position)
-#sliderFrame = tk.Frame(window, width=600, height=100)
-#sliderFrame.grid(row = 600, column=0, padx=10, pady=2)
 
 if __name__ == '__main__' :
     writeVideo = None
