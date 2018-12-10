@@ -5,6 +5,7 @@ import time
 
 class App:
     def __init__(self, window, window_title, video_source="./Resources/FaceCapture/video.avi"):
+    #def __init__(self, window, window_title, video_source=0):
         self.window = window
         self.window.title(window_title)
         self.video_source = video_source

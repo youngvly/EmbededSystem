@@ -10,7 +10,7 @@ from threading import Timer,Thread,Event
 from google.cloud import vision
 from google.cloud.vision import types
 
-class perpetualTimer():
+class perpetualTimer:
 
     def __init__(self,t,hFunction,imgs):
       self.t=t
@@ -42,31 +42,32 @@ class perpetualTimer():
                 }
 
 
-class SetCam() :
-    filename = 'Resources/FaceCapture/video.avi'
-    cam = cv2.VideoCapture(0)
-        
-    frames_per_second = 24.0
-    res = '480p'
-
-    # Standard Video Dimensions Sizes
-    STD_DIMENSIONS =  {
-        "480p": (640, 480),
-        "720p": (1280, 720),
-        "1080p": (1920, 1080),
-        "4k": (3840, 2160),
-    }
+class SetCam :
     
-    # Video Encoding, might require additional installs
-    # Types of Codes: http://www.fourstopFlag = Event()
-
-    VIDEO_TYPE = {
-        'avi' : cv2.cv.CV_FOURCC(*'XVID')
-        #'avi': cv2.VideoWriter_fourcc(*'XVID'),
-        #'mp4': cv2.VideoWriter_fourcc(*'H264'),
-        #'mp4': cv2.VideoWriter_fourcc(*'XVID'),
-    }
+    def __init__ (self,cam):
+        self.filename = 'Resources/FaceCapture/video.avi'
+            
+        self.frames_per_second = 25.0
+        self.res = '480p'
+        self.cam = cam
+        # Standard Video Dimensions Sizes
+        self.STD_DIMENSIONS =  {
+            "480p": (640, 480),
+            "720p": (1280, 720),
+            "1080p": (1920, 1080),
+            "4k": (3840, 2160),
+        }
         
+        # Video Encoding, might require additional installs
+        # Types of Codes: http://www.fourstopFlag = Event()
+
+        self.VIDEO_TYPE = {
+            'avi' : cv2.cv.CV_FOURCC(*'XVID')
+            #'avi': cv2.VideoWriter_fourcc(*'XVID'),
+            #'mp4': cv2.VideoWriter_fourcc(*'H264'),
+            #'mp4': cv2.VideoWriter_fourcc(*'XVID'),
+        }
+            
     #def __init__(self):
         
     # Set resolution for the video capture
@@ -95,7 +96,7 @@ class SetCam() :
 def camera():
     
     global img
-    setcam = SetCam()
+    setcam = SetCam(cam)
     p = perpetualTimer(5,detect_faces)
     try:
         out = cv2.VideoWriter(setcam.filename, setcam.get_video_type(setcam.filename), 25, setcam.get_dims(setcam.cam, setcam.res))
