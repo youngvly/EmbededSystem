@@ -203,36 +203,33 @@ def detect_faces(imgs):
    # Names of likelihood from google.cloud.vision.enums
     likelihood_name = ('UNKNOWN', 'VERY_UNLIKELY', 'UNLIKELY', 'POSSIBLE',
                        'LIKELY', 'VERY_LIKELY')
-    print('Faces:')
+    print "\nFaces:",;
     
     for face in faces:
-        print('anger: {}'.format(likelihood_name[face.anger_likelihood]))
-        print('joy: {}'.format(likelihood_name[face.joy_likelihood]))
-        print('surprise: {}'.format(likelihood_name[face.surprise_likelihood]))
+        #print('anger: {}'.format(likelihood_name[face.anger_likelihood]))
+        #print('joy: {}'.format(likelihood_name[face.joy_likelihood]))
+        #print('surprise: {}'.format(likelihood_name[face.surprise_likelihood]))
 
         vertices = (['({},{})'.format(vertex.x, vertex.y)
                     for vertex in face.bounding_poly.vertices])
 
-        print('face bounds: {}'.format(','.join(vertices)))
+        #print('face bounds: {}'.format(','.join(vertices)))
         
         if format(likelihood_name[face.anger_likelihood]) in likelihood_name[3::1]:
-            print("Anger")
+            print "Anger"
             cntAnger += 1
             cv2.imwrite('Resources/FaceCapture/Anger.jpg' , imgs)
         elif format(likelihood_name[face.joy_likelihood]) in likelihood_name[3::1]:
-            print("Joy")
+            print "Joy"
             cntJoy +=1
             cv2.imwrite('Resources/FaceCapture/Joy.jpg' , imgs)
         elif format(likelihood_name[face.surprise_likelihood]) in likelihood_name[3::1]:
-            print("Surprise")
+            print "Surprise"
             cntSurprise += 1
             cv2.imwrite('Resources/FaceCapture/Surprise.jpg' , imgs)
+
     return cntJoy,cntAnger,cntSurprise
-            
-def faceScore() :
-    summary = cntJoy + cntAnger + cntSurprise
-    
-    PercentJoy = cntJoy/summary * 100
+
     
 if __name__ == '__main__':
     

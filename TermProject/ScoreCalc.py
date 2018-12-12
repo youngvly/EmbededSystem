@@ -3,7 +3,7 @@ def faceScoreCalc(faceCnt) :
     if totalTry == 0:
         return 0
     #faceScore = 50
-    faceScore = 25
+    faceScore = 0
     #anger
     angerScore = faceCnt["anger"]/totalTry * 50
     surpriseScore = faceCnt["surprise"]/totalTry * 50
@@ -15,7 +15,7 @@ def faceScoreCalc(faceCnt) :
     
     
 def wordScoreCalc (wordCnt) :
-    wordScore = 50
+    wordScore = 25
     #1st : -5 , 2st -4, 3st -3 ...
     i = len(wordCnt)
     #if word cnt is upper than 3 times,
@@ -60,6 +60,10 @@ def calcScore(faceCnt,wordCnt) :
     
     if facescore < 0 :
         facescore = 0
+    if facescore > 50 :
+        facescore = 50
     if wordscore < 0 :
         wordscore = 0
+    if wordscore > 50 :
+        wordscore = 50
     return facescore + wordscore

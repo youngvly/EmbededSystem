@@ -5,10 +5,11 @@ import threading
 import time
 
 from PIL import Image, ImageTk
-from FaceDetectGoogle import detect_faces,perpetualTimer,SetCam,faceScore
+from FaceDetectGoogle import detect_faces,perpetualTimer,SetCam
 from Speech import detectSpeech,timeout,afterTimeout
 from Word2 import wordExtract
 from ScoreCalc import calcScore
+from MyVideoCapture import MyVideoCapture
 
 
 ## 20181210 self.out error Maybe.. -> Context scratch buffers could not be allocated due to unknown size.
@@ -39,7 +40,7 @@ class MainWindow :
         self.txtfile = open(self.speechFilename,'w')
         self.t =  threading.Thread(name='detectSpeech', target=detectSpeech, args=(self.txtfile,))
         ret,img = self.vid.get_frame()
-        self.p = perpetualTimer(2,detect_faces,img)
+        self.p = perpetualTimer(5,detect_faces,img)
         self.timeoutThread = threading.Timer(64,self.raiseTimeout)
         self.writeVideo = True
         
@@ -53,6 +54,10 @@ class MainWindow :
         # Get a frame from the video source
         ret, frame = self.vid.get_frame()
         self.p.setImg(frame)
+        if self.writeVideo:
+            self.out.write(frame)
+        else :
+            self.p.cancel()
         if ret:
             self.photo = ImageTk.PhotoImage(image = Image.fromarray(frame))
             self.canvas.create_image(0, 0, image = self.photo, anchor = tk.NW)
@@ -63,37 +68,15 @@ class MainWindow :
         timeout()
         self.stop()
 
-    def showtop5 (self,frames) :
-        self.top5 = wordExtract(speechFilename)
-        i=1
-        if len(top5) == 0 :
-            print("speech not detected (top5 is null)")
-        for top in top5 :
-            form = top[0] + " : "  + str(top[1])
-            print(form)
-            l = tk.Label(frames,text = form,height=20)
-            #l.grid(row=1,column=0,rowspan=3,columnspan=2,sticky = tk.E+tk.N+tk.S)
-            l.pack()
-            l.place(height=30 , y = 50 +30*i)
-            i +=1
-            
-    def showScore (self,frames) :
-        #calculate totalScore
-        totalscore = calcScore(faceCnt,self.top5)
-        score = tk.Label(frames,text = totalscore,height=20)
-        score.pack()
-
-    def clearFrame(self,frames) :
-        list = frames.grid_slaves()
-        for l in list:
-            l.destroy()
             
     def start(self):
         #global out,p,t, writeVideo,txtfile,timeoutThread
-        #write new video
         
         try :
-            
+            #write new video
+            self.out = cv2.VideoWriter(self.setcam.filename,
+                                       self.setcam.get_video_type(self.setcam.filename),
+                                       25, self.setcam.get_dims(self.setcam.cam, self.setcam.res))
             self.writeVideo = True
             #print(writeVideo)
             #start detect_face 2seconds
@@ -110,39 +93,40 @@ class MainWindow :
         
         
     def stop(self) :
-        self.out = cv2.VideoWriter(self.setcam.filename,
-                                       self.setcam.get_video_type(self.setcam.filename),
-                                       25, self.setcam.get_dims(self.setcam.cam, self.setcam.res))
+        
         #global writeVideo , faceCnt,timeoutThread,p
         self.writeVideo = False
         self.startbutton["text"] = "start"
         self.startbutton["command"] = self.start
-        #stop recording
-        self.out.release()
+        
         #stop detect_face
         self.p.cancel()
         faceCnt = self.p.getFaceCnt()
         time.sleep(2)
         #stop detect_speech ( raise Exception)
         self.timeoutThread.cancel() #stop timer thread
+        
         timeout()
-        self.t.join()
+##        self.t.join()
+        
+        #stop recording
+        self.out.release()
         
         self.txtfile.close()
-        self.resultwindow = newResultWindow()
-        self.showtop5(self.resultwindow.wordFrame)
-        self.showScore(self.resultwindow.scoreFrame)
-        
-        print(faceCnt)
         print("Stoped")
-
+        self.window.destroy()
+        newResultWindow(faceCnt)
 
 class newResultWindow :
     
-    def __init__(self,videoPath = "./Resources/FaceCapture/video.avi") :
+    def __init__(self,faceCount=0,videoPath = "./Resources/FaceCapture/video.avi") :
         
-        self.resultWindow = tk.Toplevel(window)
-        self.resultWindow.wm_title("Your Result")
+        self.speechFilename = "./Resources/speech.txt"
+        self.faceCnt = faceCount
+        
+##        self.resultWindow = tk.Toplevel(window)
+        self.resultWindow = tk.Tk()
+        self.resultWindow.title("Your Result")
         self.resultWindow.config(background="#FFFFFF")
         #self.resultWindow.geometry('640x550')
         
@@ -154,14 +138,18 @@ class newResultWindow :
         self.canvas.pack()
 
         #scoreFrame
-        self.scoreFrame = tk.Frame(self.resultWindow,width = self.vid.width, height = self.vid.height,bg = "snow2")
-        self.scoreFrame.pack(anchor=tk.CENTER, expand=True)
+        self.scoreFrame = tk.Frame(self.resultWindow,width = self.vid.width,bg = "snow2")
+        self.scoreFrame.pack(anchor=tk.CENTER, expand=True )
         #self.scoreFrame.grid(row = 1,column=0)
         
         #wordFrame
-        self.wordFrame = tk.Frame(self.resultWindow,width = self.vid.width, height = self.vid.height,bg = "snow2")
-        self.scoreFrame.pack(anchor=tk.CENTER, expand=True)
+        self.wordFrame = tk.Frame(self.resultWindow,width = self.vid.width, height=self.vid.height*0.4, bg = "snow2")
+        self.wordFrame.pack(anchor=tk.CENTER, expand=True )
         #self.wordFrame.grid(row = 2,column=0)
+        print "here"
+        self.top5 = wordExtract(self.speechFilename)
+        self.showtop5(self.wordFrame)
+        self.showScore(self.scoreFrame)
         
         self.delay = 15
         self.update()
@@ -173,40 +161,37 @@ class newResultWindow :
          ret, frame = self.vid.get_frame()
 
          if ret:
-            self.photo = mageTk.PhotoImage(image = Image.fromarray(frame))
+            self.photo = ImageTk.PhotoImage(image = Image.fromarray(frame))
             self.canvas.create_image(0, 0, image = self.photo, anchor = tk.NW)
 
-         self.window.after(self.delay, self.update)
+         self.resultWindow.after(self.delay, self.update)
+    
+    def showtop5 (self,frames) :
+        i=1
+        if len(self.top5) == 0 :
+            print("speech not detected (top5 is null)")
+        for top in self.top5 :
+            form = top[0] + " : "  + str(top[1])
+            #print(form)
+            l = tk.Label(frames,text = form)
+##            l.grid(row=1,column=0,rowspan=3,columnspan=2,sticky = tk.E+tk.N+tk.S)
+            #l.pack()
+            l.place(height=10 , y = 11*i + 10)
+            i +=1
+            
+    def showScore (self,frames) :
+        #calculate totalScore
+        totalscore = calcScore(self.faceCnt,self.top5)
+        score = tk.Label(frames,text = "Your Score : " + str(totalscore))
+        score.config(font=("Courier", 44))
+        score.pack()
+
+    def clearFrame(self,frames) :
+        list = frames.grid_slaves()
+        for l in list:
+            l.destroy()
 
 
-class MyVideoCapture:
-    def __init__(self, video_source=0):
-        # Open the video source
-        self.vid = cv2.VideoCapture(video_source)
-        if not self.vid.isOpened():
-            raise ValueError("Unable to open video source", video_source)
-
-        # Get video source width and height
-        self.width = self.vid.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
-        self.height = self.vid.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
-
-    def get_frame(self):
-        if self.vid.isOpened():
-            ret, frame = self.vid.read()
-            if ret:
-                # Return a boolean success flag and the current frame converted to BGR
-                return (ret, cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-            else:
-                return (ret, None)
-        else:
-            return (ret, None)
-
-    # Release the video source when the object is destroyed
-    def __del__(self):
-        if self.vid.isOpened():
-            self.vid.release()
-        
-        
 
 if __name__ == '__main__' :
     try :

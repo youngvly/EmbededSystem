@@ -40,8 +40,8 @@ def wordExtract(filename) :
         return sortedFrequency
     i = 0
     avgCnt = sum(x[1] for x in sortedFrequency)/len(sortedFrequency)
-    print("average Cnt" , avgCnt)
-    print (sortedFrequency)
+##    print("average Cnt" , avgCnt)
+##    print (sortedFrequency)
     for sortF in sortedFrequency:
         #print(i)
         if sortF[1] >= avgCnt:
@@ -49,7 +49,7 @@ def wordExtract(filename) :
         i += 1
         if len(top5) == 5 :
             break
-    print (top5)
+##    print (top5)
     return top5
 
 if __name__ == "__main__" :

@@ -28,7 +28,7 @@ filename = "Resources/speech.txt"
 def timeout() :
     global TIMEOUTVAL
     TIMEOUTVAL = True
-    afterTimeout()
+##    afterTimeout()
     #raise Exception ("Timeout")        
         
 def afterTimeout() :
@@ -116,7 +116,7 @@ def listen_print_loop(responses,txtfile):
             #print(TIMEOUTVAL)
             if TIMEOUTVAL :
                 txtfile.write((transcript + overwrite_chars).encode('utf-8')) 
-                break
+                return
             if not response.results:
                 continue
 
@@ -162,7 +162,7 @@ def listen_print_loop(responses,txtfile):
 
 def detectSpeech(txtfile):
     global TIMEOUTVAL
-    TIMEOUTVAL = False
+##    TIMEOUTVAL = False
     # See http://g.co/cloud/speech/docs/languages
     # for a list of supported languages.
     language_code = 'ko-KR'  # a BCP-47 language tag
@@ -179,6 +179,8 @@ def detectSpeech(txtfile):
     
     try:
         with MicrophoneStream(RATE, CHUNK) as stream:
+            if TIMEOUTVAL :
+                return
 
             audio_generator = stream.generator()
             requests = (types.StreamingRecognizeRequest(audio_content=content)
