@@ -135,17 +135,19 @@ class newResultWindow :
 
         # Create a canvas that can fit the above video source size
         self.canvas = tk.Canvas(self.resultWindow, width = self.vid.width, height = self.vid.height)
-        self.canvas.pack()
+        self.canvas.grid(row = 1,column=0)
+        #self.canvas.pack()
 
         #scoreFrame
         self.scoreFrame = tk.Frame(self.resultWindow,width = self.vid.width,bg = "snow2")
-        self.scoreFrame.pack(anchor=tk.CENTER, expand=True )
-        #self.scoreFrame.grid(row = 1,column=0)
+        #self.scoreFrame.pack(anchor=tk.CENTER, expand=True )
+        self.scoreFrame.grid(row = 2,column=0)
         
         #wordFrame
-        self.wordFrame = tk.Frame(self.resultWindow,width = self.vid.width, height=self.vid.height*0.4, bg = "snow2")
-        self.wordFrame.pack(anchor=tk.CENTER, expand=True )
-        #self.wordFrame.grid(row = 2,column=0)
+        self.wordFrame = tk.Frame(self.resultWindow,width = self.vid.width*0.2, height=self.vid.height*0.4, bg = "snow2")
+        #self.wordFrame.pack(anchor=tk.CENTER, expand=True )
+        self.wordFrame.grid(row = 1,column=1,rowspan=2)
+        
         print "here"
         self.top5 = wordExtract(self.speechFilename)
         self.showtop5(self.wordFrame)
@@ -168,7 +170,12 @@ class newResultWindow :
     
     def showtop5 (self,frames) :
         i=1
+        l = tk.Label(frames,text = "Word")
+        l.place(height=15 , y = (10+5)*i)
+        i+=1
         if len(self.top5) == 0 :
+            l = tk.Label(frames,text = "Speech Not Detected")
+            l.place(height=15 , y = (10+5)*i)
             print("speech not detected (top5 is null)")
         for top in self.top5 :
             form = top[0] + " : "  + str(top[1])
@@ -176,7 +183,7 @@ class newResultWindow :
             l = tk.Label(frames,text = form)
 ##            l.grid(row=1,column=0,rowspan=3,columnspan=2,sticky = tk.E+tk.N+tk.S)
             #l.pack()
-            l.place(height=10 , y = 11*i + 10)
+            l.place(height=15 , y = (15+5)*i)
             i +=1
             
     def showScore (self,frames) :
