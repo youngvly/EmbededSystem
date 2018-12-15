@@ -107,7 +107,7 @@ class MainWindow :
         self.timeoutThread.cancel() #stop timer thread
         
         timeout()
-##        self.t.join()
+        self.t.join()
         
         #stop recording
         self.out.release()
@@ -148,7 +148,7 @@ class newResultWindow :
         #self.wordFrame.pack(anchor=tk.CENTER, expand=True )
         self.wordFrame.grid(row = 1,column=1,rowspan=2)
         
-        print "here"
+        #print "here"
         self.top5 = wordExtract(self.speechFilename)
         self.showtop5(self.wordFrame)
         self.showScore(self.scoreFrame)

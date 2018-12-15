@@ -5,11 +5,11 @@ def faceScoreCalc(faceCnt) :
     #faceScore = 50
     faceScore = 0
     #anger
-    angerScore = faceCnt["anger"]/totalTry * 50
-    surpriseScore = faceCnt["surprise"]/totalTry * 50
-    joyScore = faceCnt["joy"]/totalTry * 50
+    angerScore = faceCnt["anger"]/float(totalTry) * 50
+    surpriseScore = faceCnt["surprise"]/float(totalTry) * 50
+    joyScore = faceCnt["joy"]/float(totalTry) * 50
     
-    faceScore = faceScore + joyScore - angerScore - surpriseScore * 0.5
+    faceScore = faceScore + joyScore - angerScore*0.25 - surpriseScore * 0.15
     #faceScore = faceScore - angerScore - surpriseScore * 0.5
     return faceScore
     
@@ -25,7 +25,7 @@ def wordScoreCalc (wordCnt) :
         i -= 1
     
 def isFiltered(word):
-    #print (filterList[0])
+    #print(word)
     if word in filterList :
         return True
     return False
@@ -49,8 +49,16 @@ def wordScoreCalc_Filter (wordCnt) :
     #if word cnt is upper than 3 times,
     for w in wordCnt :
         if isFiltered(w[0]) :
-            wordScore - (w[1]*i)
+            wordScore = wordScore - (w[1]*i)
         i -= 1
+##    for f in filterList :
+##        for w in wordCnt:
+##            print w
+##            if f in w[0] :
+##                print w[0] , "filtered"
+##                wordScore = wordScore - (w[1]*i)
+##                break
+##        i -= 1
     return wordScore
     
 def calcScore(faceCnt,wordCnt) :
@@ -66,4 +74,5 @@ def calcScore(faceCnt,wordCnt) :
         wordscore = 0
     if wordscore > 50 :
         wordscore = 50
+    #print facescore , wordscore
     return facescore + wordscore

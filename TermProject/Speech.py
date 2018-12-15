@@ -83,8 +83,8 @@ class MicrophoneStream(object):
 
     def generator(self):
         while not self.closed:
-##            if TIMEOUTVAL == True :
-##                return
+            if TIMEOUTVAL == True :
+                return
             # Use a blocking get() to ensure there's at least one chunk of
             # data, and stop iteration if the chunk is None, indicating the
             # end of the audio stream.
