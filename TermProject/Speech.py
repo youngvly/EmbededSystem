@@ -13,7 +13,7 @@ from google.cloud.speech import enums
 from google.cloud.speech import types
 import pyaudio
 from six.moves import queue
-from Word import wordExtract
+# from Word import wordExtract
 from threading import Timer
 
 #time bool
@@ -31,12 +31,12 @@ def timeout() :
 ##    afterTimeout()
     #raise Exception ("Timeout")        
         
-def afterTimeout() :
-    wordDict = wordExtract(filename)
-    if len(wordDict) == 0 :
-        print("speech not detected")
-    for top in wordDict :
-        print(top[0] , ":" , top[1])
+# def afterTimeout() :
+#     wordDict = wordExtract(filename)
+#     if len(wordDict) == 0 :
+#         print("speech not detected")
+#     for top in wordDict :
+#         print(top[0] , ":" , top[1])
     
 
 class MicrophoneStream(object):
